@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.KeyEvent;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
 
@@ -40,7 +41,10 @@ public class H5Activity extends Activity {
     protected void onStart() {
         //activity后台且可见
         super.onStart();
+        //加载本地文件
         webView.loadUrl("file:///android_asset/html/test.html");
+        //加载网络
+//        webView.loadUrl("http://www.baidu.com/");
     }
 
     @Override
@@ -67,6 +71,21 @@ public class H5Activity extends Activity {
         //回收资源
         if (null != unbinder) {
             unbinder.unbind();
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if (webView.canGoBack()) {
+            webView.goBack();
+        } else {
+            finish();
         }
     }
 }
