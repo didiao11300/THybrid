@@ -40,14 +40,14 @@ public class TWebViewClient extends WebViewClient {
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         String url = request.getUrl().toString();
-        setJsEnable(view, url);
+//        setJsEnable(view, url);
 //        view.loadUrl(request.getUrl().toString());
         return super.shouldOverrideUrlLoading(view, request);
     }
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        setJsEnable(view, url);
+//        setJsEnable(view, url);
 //        view.loadUrl(url);
         return super.shouldOverrideUrlLoading(view, url);
     }

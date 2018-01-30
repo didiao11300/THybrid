@@ -6,10 +6,12 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.KeyEvent;
 import android.webkit.WebView;
+import android.widget.Button;
 import android.widget.ProgressBar;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import butterknife.Unbinder;
 
 /**
@@ -22,6 +24,8 @@ public class H5Activity extends Activity {
     WebView webView;
     @BindView(R.id.progressbar)
     ProgressBar progressBar;
+    @BindView(R.id.btn_js)
+    Button btn_js;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,6 +49,11 @@ public class H5Activity extends Activity {
         webView.loadUrl("file:///android_asset/html/test.html");
         //加载网络
 //        webView.loadUrl("http://www.baidu.com/");
+    }
+
+    @OnClick(R.id.btn_js)
+    void callJs() {
+        webView.loadUrl("javascript:confirmDialog(" + "'这是android'" + ")");
     }
 
     @Override

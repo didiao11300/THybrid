@@ -1,9 +1,27 @@
 <!DOCTYPE HTML>
 <html>
-<title>测试页面</title>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="content-type" content="text/html; charset=UTF-8">
+    <title>测试页面</title>
+</head>
 <body>
 <a href="http://www.baidu.com">点击百度</a>
+<input type="button" value="js调用java代码" onclick="click1()"/>
+<input type="button" value="alert" onclick="alert('你好！')"/>
+<input type="button" value="confirm" onclick="confirmDialog('还要继续吗？')"/>
 
 </body>
-
+<script type="text/javascript">
+     function confirmDialog(msg){
+            if(confirm(msg)){
+                alert("继续");
+            }else{
+                alert("再见");
+            }
+        }
+        function click1(){
+            window.TJsBridge.showToast("来自js的消息");
+        }
+    </script>
 </html>

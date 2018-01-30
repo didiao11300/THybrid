@@ -35,7 +35,6 @@ public class TWebView extends WebView {
 
     @SuppressLint("SetJavaScriptEnabled")
     private void initWebView(Context context) {
-        // FIXME: 2018/1/30 decode
         WebSettings webSettings = getSettings();
         //允许js调用
         webSettings.setJavaScriptEnabled(true);
@@ -51,6 +50,8 @@ public class TWebView extends WebView {
         webSettings.setAppCacheEnabled(false);
 //        webSettings.setAppCachePath("");
         webSettings.setBlockNetworkImage(true);
+//        web组 ajax 框架请求后台数据的时，请把这里放开，否则不显示
+//        webSettings.setDomStorageEnabled(true);  //很关键！！
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             //漏洞地址http://www.cnvd.org.cn/webinfo/show/4365?from=groupmessage
             //设置不允许通过file域url中的Javascript读取其他本地文件
@@ -59,10 +60,11 @@ public class TWebView extends WebView {
             webSettings.setAllowFileAccessFromFileURLs(false);
             //设置不允许通过file域url中的Javascript访问其他的源
             webSettings.setAllowUniversalAccessFromFileURLs(false);
-            Log.i(Util.TAG,"setAllowFileAccessFromFileURLs()...false");
+            Log.i(Util.TAG, "setAllowFileAccessFromFileURLs()...false");
         }
         setWebViewClient(new TWebViewClient());
         setWebChromeClient(new TWebChromeClient());
+        addJavascriptInterface(new TJsBridge(getContext()), TJsBridge.class.getSimpleName());
     }
 
     @Override
