@@ -2,6 +2,8 @@ package com.example.thybrid.core;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -13,14 +15,13 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
+import com.example.thybrid.TRouter;
+import com.example.thybrid.util.Util;
+
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.net.URISyntaxException;
 import java.util.Date;
 
 import static com.example.thybrid.util.Util.TAG;
@@ -40,17 +41,62 @@ public class TWebViewClient extends WebViewClient {
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
         String url = request.getUrl().toString();
-//        setJsEnable(view, url);
-//        view.loadUrl(request.getUrl().toString());
-        return super.shouldOverrideUrlLoading(view, request);
+        setJsEnable(view, url);
+        return handleUrl(view.getContext(), url);
     }
+
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-//        setJsEnable(view, url);
-//        view.loadUrl(url);
-        return super.shouldOverrideUrlLoading(view, url);
+        setJsEnable(view, url);
+        return handleUrl(view.getContext(), url);
     }
+
+    private boolean handleUrl(Context context, String url) {
+        if (url.contains(".3gp") || url.contains(".flv") || url.contains(".mp4")) {
+            Intent intent = new Intent("android.intent.action.VIEW");
+            context.startActivity(intent);
+            return true;
+        } else if (Util.isNetUrl(url) && url.endsWith(".apk")) {
+            //前往下载页面
+            return true;
+        } else if (url.contains("weixin://wap/pay")) {
+            //微信支付页面
+            try {
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(context.getApplicationContext(), "请安装微信", Toast.LENGTH_SHORT).show();
+            }
+            return true;
+        } else if (TRouter.isRouter(url)) {
+            TRouter.build(url).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).go(context);
+            //自己的路由地址
+            return true;
+        } else if (url.contains("#") || Util.isNetUrl(url)) {
+            //自己处理web页面
+            return false;
+        } else if (!Util.isNetUrl(url)) {
+            try {
+                //根据schme协议跳转
+                Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                intent.addCategory("android.intent.category.BROWSABLE");
+                intent.setComponent(null);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                if (Build.VERSION.SDK_INT >= 15) {
+                    intent.setSelector(null);
+                }
+                context.startActivity(intent);
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+            }
+            return true;
+        }
+        return false;
+    }
+
 
     @SuppressLint("SetJavaScriptEnable")
     private void setJsEnable(WebView view, String url) {
@@ -124,7 +170,7 @@ public class TWebViewClient extends WebViewClient {
             Log.i("tory_test", "URL:-> 原始URL是:" + url);
             try {
                 AssetManager am = view.getResources().getAssets();
-                String filename  = "html/intercept_baidu.html";
+                String filename = "html/intercept_baidu.html";
                 InputStream is = am.open(filename);
                 response = new WebResourceResponse("text/html", "utf-8", is);
             } catch (Exception e) {

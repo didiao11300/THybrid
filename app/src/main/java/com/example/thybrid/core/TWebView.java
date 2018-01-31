@@ -50,8 +50,10 @@ public class TWebView extends WebView {
         webSettings.setAppCacheEnabled(false);
 //        webSettings.setAppCachePath("");
         webSettings.setBlockNetworkImage(true);
-//        web组 ajax 框架请求后台数据的时，请把这里放开，否则不显示
-//        webSettings.setDomStorageEnabled(true);  //很关键！！
+//        webajax 框架请求后台数据的时，请把这里放开，否则不显示//很关键！！
+        webSettings.setDomStorageEnabled(true);  //设置可以使用localStorage
+
+        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             //漏洞地址http://www.cnvd.org.cn/webinfo/show/4365?from=groupmessage
             //设置不允许通过file域url中的Javascript读取其他本地文件
@@ -63,6 +65,7 @@ public class TWebView extends WebView {
             Log.i(Util.TAG, "setAllowFileAccessFromFileURLs()...false");
         }
         setWebViewClient(new TWebViewClient());
+        //设置这个可以支持html5内置视频
         setWebChromeClient(new TWebChromeClient());
         addJavascriptInterface(new TJsBridge(getContext()), TJsBridge.class.getSimpleName());
     }

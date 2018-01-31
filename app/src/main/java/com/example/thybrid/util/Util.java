@@ -17,11 +17,26 @@ import okio.Source;
 
 public class Util {
     public static final String TAG = "tory_test";
+
     /**
      * 将 数据流 InputStream 包装成 ByteArrayInputStream, 可以让 InputStream 多次使用
      *
      * @param input 输入 InputStream
      * @return 返回 ByteArrayInputStream
      */
+    public static boolean isHttpUrl(String url) {
+        return (null != url) && (url.length() > 6) && url.substring(0, 7).equalsIgnoreCase("http://");
+    }
+
+    public static boolean isHttpsUrl(String url) {
+        return (null != url) && (url.length() > 7) && url.substring(0, 8).equalsIgnoreCase("https://");
+    }
+
+    /**
+     * 是网络url
+     * */
+    public static boolean isNetUrl(String url) {
+        return (isHttpUrl(url) || isHttpsUrl(url));
+    }
 
 }
