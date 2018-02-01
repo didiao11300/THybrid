@@ -3,13 +3,39 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="content-type" content="text/html; charset=UTF-8">
-    <title>测试页面</title>
+    <title>java 调用 js页面</title>
 </head>
 <body>
-<a href="http://www.baidu.com">点击百度</a>
-<input type="button" value="js调用java代码" onclick="click1()"/>
-<input type="button" value="alert" onclick="alert('你好！')"/>
-<input type="button" value="confirm" onclick="confirmDialog('还要继续吗？')"/>
+<p>
+    <xmp id="show"></xmp>
+</p>
+<p>
+    <xmp id="init"></xmp>
+</p>
+<p>
+    <a href="http://www.baidu.com">点击百度</a>
+</p>
+<p>
+    <input type="button" value="js调用java代码" onclick="showToast()"/>
+</p>
+<p>
+    <input type="button" value="alert" onclick="alert('你好！')"/>
+</p>
+<p>
+    <input type="button" value="confirm" onclick="confirmDialog('还要继续吗？')"/>
+</p>
+<p>
+    <input type="text" id="text1" value="用户名(username)" />
+</p>
+<p>
+    <input type="text" id="text2" value="password" />
+</p>
+<p>
+    <input type="button" value="发送消息" onclick="sendMsg()"/>
+</p>
+<p>
+    <input type="button" value="发送消息回调" onclick=""/>
+</p>
 
 </body>
 <script type="text/javascript">
@@ -20,8 +46,23 @@
                 alert("再见");
             }
         }
-        function click1(){
+     function showToast(){
             window.TJsBridge.showToast("来自js的消息");
-        }
-    </script>
+     }
+
+     function sendMsg(){
+       <!--var str1 =  $("#text1").val();-->
+       <!--var str2 =  $("#text1").val();-->
+       var data = {id: 1, user: "str1", passwd: "str2"};
+       var messageQueueString = JSON.stringify(data);
+       <!--alert(""+messageQueueString);-->
+       window.TJsBridge.callJava("hybrid://action/toast",messageQueueString,"callback");
+        <!--window.TJsBridge.send("hello");-->
+     }
+
+     function callback(data){
+        alert(data);
+     }
+
+</script>
 </html>

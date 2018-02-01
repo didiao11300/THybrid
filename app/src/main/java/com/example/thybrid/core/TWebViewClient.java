@@ -17,7 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-import com.example.thybrid.TRouter;
+import com.example.thybrid.SchemeEngine;
 import com.example.thybrid.util.Util;
 
 import java.io.InputStream;
@@ -71,9 +71,9 @@ public class TWebViewClient extends WebViewClient {
                 Toast.makeText(context.getApplicationContext(), "请安装微信", Toast.LENGTH_SHORT).show();
             }
             return true;
-        } else if (TRouter.isRouter(url)) {
-            TRouter.build(url).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).go(context);
-            //自己的路由地址
+        } else if (SchemeEngine.couldHandleUrl(url)) {
+            // FIXME: 2018/2/1 
+            SchemeEngine.handleUrl(context, url,null);
             return true;
         } else if (url.contains("#") || Util.isNetUrl(url)) {
             //自己处理web页面

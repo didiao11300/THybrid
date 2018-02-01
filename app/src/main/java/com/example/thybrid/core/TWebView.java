@@ -67,7 +67,7 @@ public class TWebView extends WebView {
         setWebViewClient(new TWebViewClient());
         //设置这个可以支持html5内置视频
         setWebChromeClient(new TWebChromeClient());
-        addJavascriptInterface(new TJsBridge(getContext()), TJsBridge.class.getSimpleName());
+        addJavascriptInterface(new TJsBridge(this), TJsBridge.class.getSimpleName());
     }
 
     @Override
