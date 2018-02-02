@@ -8,6 +8,10 @@ import android.view.KeyEvent;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Toast;
+
+import com.example.thybrid.core.FuncCallBack;
+import com.example.thybrid.core.TWebView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -53,7 +57,14 @@ public class H5Activity extends Activity {
 
     @OnClick(R.id.btn_js)
     void callJs() {
-        webView.loadUrl("javascript:confirmDialog(" + "'这是android'" + ")");
+        if (webView instanceof TWebView) {
+            ((TWebView) webView).callJs("confirmDialog", "这是android", new FuncCallBack() {
+                @Override
+                public void onCallback(String data) {
+                    Toast.makeText(H5Activity.this, data, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     @Override

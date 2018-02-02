@@ -5,10 +5,8 @@ import android.content.Context;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
 import com.example.thybrid.util.Util;
 
@@ -18,6 +16,8 @@ import com.example.thybrid.util.Util;
  */
 
 public class TWebView extends WebView {
+    private IJsBridge mJsBridge;
+
     public TWebView(Context context) {
         super(context);
         initWebView(context);
@@ -64,10 +64,21 @@ public class TWebView extends WebView {
             webSettings.setAllowUniversalAccessFromFileURLs(false);
             Log.i(Util.TAG, "setAllowFileAccessFromFileURLs()...false");
         }
-        setWebViewClient(new TWebViewClient());
+        TWebViewClient client = new TWebViewClient(this);
+        setWebViewClient(client);
         //设置这个可以支持html5内置视频
         setWebChromeClient(new TWebChromeClient());
-        addJavascriptInterface(new TJsBridge(this), TJsBridge.class.getSimpleName());
+        addJavascriptInterface(client, TWebViewClient.BRADGE_NAME);
+        mJsBridge = client;
+    }
+
+    /**
+     * webview 对外提供js接口
+     * */
+    public void callJs(String jsFuncName, String data, FuncCallBack callback) {
+        if (null != mJsBridge) {
+            mJsBridge.callJs(jsFuncName, data, callback);
+        }
     }
 
     @Override

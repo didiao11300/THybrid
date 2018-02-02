@@ -45,9 +45,10 @@
             }else{
                 alert("再见");
             }
+            return "调用成功";
         }
      function showToast(){
-            window.TJsBridge.showToast("来自js的消息");
+            window.TJsBridge.callJava("hybrid://action/toast?data='hello'");
      }
 
      function sendMsg(){
@@ -56,7 +57,7 @@
        var data = {id: 1, user: "str1", passwd: "str2"};
        var messageQueueString = JSON.stringify(data);
        <!--alert(""+messageQueueString);-->
-       window.TJsBridge.callJava("hybrid://action/toast",messageQueueString,"callback");
+       window.TJsBridge.callJava("hybrid://action/toast");
         <!--window.TJsBridge.send("hello");-->
      }
 

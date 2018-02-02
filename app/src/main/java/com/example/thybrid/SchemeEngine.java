@@ -7,7 +7,9 @@ import android.net.Uri;
 import android.text.TextUtils;
 
 import com.chenenyu.router.Router;
+import com.example.thybrid.core.FuncCallBack;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,12 +20,17 @@ import java.util.Map;
  */
 
 public class SchemeEngine extends Router {
-    private static Map<String, Class<? extends Activity>> routerMap = new HashMap<>();
-    private static List<String> schemeMap = new ArrayList<>();
+    private static Map<String, Class<? extends Activity>> mMapRouter = new HashMap<>();
 
-    public static Map getRouterMap(){
-        return routerMap;
+    public static Map getRouterMap() {
+        return mMapRouter;
     }
+
+    public static final String HYBRID_SCHEME = "hybrid://";
+    //处理java调用js后的回调path是methodid 参数是?data=
+    public static final String HYBRID_JAVA_CALL_JS_RETURE = "hybrid://callback/";
+    public static final String HYBRID_JAVA_CALL_JS_PARAM = "data";
+
     //处理android的跳转
     public static final String HYBRID_ACTIVITY_MODULE = "hybrid://activity/";
     public static final String HYBRID_ACTIVITY_MAIN = "hybrid://activity/main";
@@ -52,25 +59,34 @@ public class SchemeEngine extends Router {
         if (TextUtils.isEmpty(url)) {
             return false;
         }
-        for (String value : schemeMap) {
-            if (url.startsWith(value)) {
-                return true;
-            }
+        if (url.startsWith(HYBRID_SCHEME)) {
+            return true;
+        }
+        return false;
+    }
+
+    //是否是java调用js之后的回调函数
+    public static boolean containReturn(String url) {
+        if (TextUtils.isEmpty(url)) {
+            return false;
+        }
+        if (url.startsWith(HYBRID_JAVA_CALL_JS_RETURE)) {
+            return true;
         }
         return false;
     }
 
     static {
-        routerMap.put(HYBRID_ACTIVITY_MAIN, MainActivity.class);
-        routerMap.put(HYBRID_ACTIVITY_HOME, HomeActivity.class);
-        routerMap.put(HYBRID_ACTIVITY_H5, H5Activity.class);
+        mMapRouter.put(HYBRID_ACTIVITY_MAIN, MainActivity.class);
+        mMapRouter.put(HYBRID_ACTIVITY_HOME, HomeActivity.class);
+        mMapRouter.put(HYBRID_ACTIVITY_H5, H5Activity.class);
     }
 
     public static boolean couldRouter(String url) {
         if (TextUtils.isEmpty(url)) {
             return false;
         }
-        for (String key : routerMap.keySet()) {
+        for (String key : mMapRouter.keySet()) {
             if (url.startsWith(key)) {
                 return true;
             }
@@ -78,7 +94,7 @@ public class SchemeEngine extends Router {
         return false;
     }
 
-    public static void handleUrl(Context context, String url, String data) {
+    public static void handleUrl(Context context, String url) {
         Uri uri = Uri.parse(url);
         String scheme = uri.getScheme();
         String host = uri.getHost();

@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -21,9 +23,13 @@ import com.example.thybrid.SchemeEngine;
 import com.example.thybrid.util.Util;
 
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.net.URISyntaxException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import static com.example.thybrid.SchemeEngine.HYBRID_JAVA_CALL_JS_PARAM;
 import static com.example.thybrid.util.Util.TAG;
 
 /**
@@ -31,7 +37,21 @@ import static com.example.thybrid.util.Util.TAG;
  * WebViewClient主要帮助WebView处理各种通知、请求事件的
  */
 
-public class TWebViewClient extends WebViewClient {
+public class TWebViewClient extends WebViewClient implements IJsBridge {
+    private long mUniqId = 0;
+    public static final String BRADGE_NAME = "TJsBridge";
+    public static final String JAVA_CALL_JS_CALLBACK_PRE = "JAVA_CB_";
+    private WebView mWebView;
+    private Context mContext;
+    //java 调用js成功过后的 js发起的的iframe.src 被java消费后的回调映射
+    private static Map<String, WeakReference<FuncCallBack>> mMapJavaCallJsReture = new HashMap<>();
+
+
+    public TWebViewClient(WebView webView) {
+        this.mWebView = webView;
+        this.mContext = webView.getContext().getApplicationContext();
+    }
+
     /**
      * 在webview加载URL的时候可以截获这个动作, 这里主要说它的返回值的问题：
      * 1、返回: return true;  webview处理url是根据程序来执行的。
@@ -52,7 +72,14 @@ public class TWebViewClient extends WebViewClient {
         return handleUrl(view.getContext(), url);
     }
 
+    /**
+     * 处理来自js的url，再callJava和shouldOverrideUrlLoading中调用
+     */
     private boolean handleUrl(Context context, String url) {
+        Uri uri = Uri.parse(url);
+        String scheme = uri.getScheme();
+        String host = uri.getHost();
+        String path = uri.getPath();
         if (url.contains(".3gp") || url.contains(".flv") || url.contains(".mp4")) {
             Intent intent = new Intent("android.intent.action.VIEW");
             context.startActivity(intent);
@@ -71,9 +98,22 @@ public class TWebViewClient extends WebViewClient {
                 Toast.makeText(context.getApplicationContext(), "请安装微信", Toast.LENGTH_SHORT).show();
             }
             return true;
-        } else if (SchemeEngine.couldHandleUrl(url)) {
+        } else if (SchemeEngine.containReturn(host)) {
+            //处理java调用js后，js传后来的回调函数
+            WeakReference<FuncCallBack> weakCallBack = mMapJavaCallJsReture.get(path);
+            if (null != weakCallBack && null != weakCallBack.get()) {
+                FuncCallBack callBack = weakCallBack.get();
+                // FIXME: 2018/2/2 放到主线程
+                String param = uri.getQueryParameter(HYBRID_JAVA_CALL_JS_PARAM);
+                if (null != callBack) {
+                    callBack.onCallback(param);
+                }
+                mMapJavaCallJsReture.remove(weakCallBack);
+            }
+
+        } else if (SchemeEngine.couldHandleUrl(scheme)) {
             // FIXME: 2018/2/1 
-            SchemeEngine.handleUrl(context, url,null);
+            SchemeEngine.handleUrl(context, url);
             return true;
         } else if (url.contains("#") || Util.isNetUrl(url)) {
             //自己处理web页面
@@ -180,4 +220,54 @@ public class TWebViewClient extends WebViewClient {
         return response;
     }
 
+    /**
+     * 1，当JS拿到Android这个对象后，就可以调用这个Android对象中所有的方法，
+     * 包括系统类（java.lang.Runtime 类），从而进行任意代码执行
+     * 2，4.2之前
+     */
+    //这个annote不能继承
+    @JavascriptInterface
+    @Override
+    public void callJava(String action) {
+        handleUrl(mContext, action);
+    }
+
+    @Override
+    public void callJs(String js, String data) {
+        loadJs(js, data, null);
+    }
+
+    @Override
+    public void callJs(String js, String data, FuncCallBack callBack) {
+        loadJs(js, data, callBack);
+    }
+
+    private void loadJs(final String jsFunctionName, final String data, final FuncCallBack callBack) {
+        // 必须要找主线程才会将数据传递出去 --- 划重点
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            String javascriptCommand = String.format("javascript:%s('%s')", jsFunctionName, data);
+            mWebView.evaluateJavascript(javascriptCommand, new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String rspData) {
+                    if (null != callBack) {
+                        callBack.onCallback(rspData);
+                    }
+                }
+            });
+        } else {
+            //这里需要算一个callbackid
+            String callbackId = JAVA_CALL_JS_CALLBACK_PRE + (mUniqId++) + (System.currentTimeMillis());
+            if (null != callBack) {
+                mMapJavaCallJsReture.put(callbackId, new WeakReference(callBack));
+            }
+            Message m = new Message();
+            m.callbackId = callbackId;
+            m.data = data;
+            m.jsFunctionName = jsFunctionName;
+            // FIXME: 2018/2/2 json可能有问题
+            String jsonStr = m.toJson();
+            String javascriptCommand = String.format("javascript:" + BRADGE_NAME + "._handleJavaMessage('%s')", jsonStr);
+            mWebView.loadUrl(javascriptCommand);
+        }
+    }
 }
